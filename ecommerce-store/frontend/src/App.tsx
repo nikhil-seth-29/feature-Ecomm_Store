@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { addToCart, checkout } from "./api";
+import { addToCart, checkout } from "./api.ts";
 
 function App() {
   const [discount, setDiscount] = useState("");

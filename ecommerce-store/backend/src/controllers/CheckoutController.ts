@@ -1,8 +1,9 @@
+import { Request, Response } from "express";
 import { CheckoutService } from "../services/CheckoutService";
 
 const service = new CheckoutService();
 
-export const checkout = (req, res) => {
+export const checkout = (req: Request, res: Response): void => {
   try {
     const order = service.checkout(
       req.body.userId,

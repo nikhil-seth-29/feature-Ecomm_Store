@@ -5,6 +5,10 @@ export class AdminService {
     return store.stats;
   }
 
+  /**
+   * Admin-only manual discount generation.
+   * Useful for testing or operational overrides.
+  */
   generateDiscount(): string {
     const code = `DISCOUNT-${Date.now()}`;
     store.discount.generate(code);

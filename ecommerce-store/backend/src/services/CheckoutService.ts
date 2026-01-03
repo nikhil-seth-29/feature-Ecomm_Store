@@ -1,6 +1,8 @@
 import { store } from "../repositories/InMemoryStore";
 import { Order } from "../domain/Order";
 
+const DISCOUNT_EVERY_N_ORDERS = 3;
+
 export class CheckoutService {
   checkout(userId: string, discountCode?: string): Order {
     const cart = store.carts.get(userId);
@@ -22,7 +24,7 @@ export class CheckoutService {
     store.stats.totalPurchaseAmount += finalAmount;
     store.stats.totalItemsPurchased += cart.getItems().length;
 
-    if (store.orderCount % 3 === 0) {
+    if (store.orderCount % DISCOUNT_EVERY_N_ORDERS === 0) {
       const code = `DISCOUNT-${Date.now()}`;
       store.discount.generate(code);
       store.stats.discountCodes.push(code);

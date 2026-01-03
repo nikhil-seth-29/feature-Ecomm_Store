@@ -1,8 +1,15 @@
-import { CartService } from "../services/CartService";
+import { CheckoutService } from "../services/CheckoutService";
 
-const service = new CartService();
+const service = new CheckoutService();
 
-export const addToCart = (req, res) => {
-  service.addItem(req.body.userId, req.body);
-  res.json({ status: "OK" });
+export const checkout = (req, res) => {
+  try {
+    const order = service.checkout(
+      req.body.userId,
+      req.body.discountCode
+    );
+    res.json(order);
+  } catch (e: any) {
+    res.status(400).json({ error: e.message });
+  }
 };

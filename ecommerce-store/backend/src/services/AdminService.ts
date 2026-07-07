@@ -1,12 +1,5 @@
 import { store } from "../repositories/InMemoryStore";
 
-/**
- * AdminService — exposes operational visibility and controls.
- *
- * Intentionally separated from the customer-facing services
- * so admin capabilities can be secured independently (e.g., behind
- * an admin-only auth middleware in a production system).
- */
 export class AdminService {
   getStats() {
     return {
@@ -21,11 +14,6 @@ export class AdminService {
     };
   }
 
-  /**
-   * Admin-only manual discount generation.
-   * Useful for customer-service overrides or testing.
-   * Overwrites any existing active (unused) code.
-   */
   generateDiscount(): string {
     const code = `DISCOUNT-${Date.now()}`;
     store.discount.generate(code);
@@ -33,7 +21,6 @@ export class AdminService {
     return code;
   }
 
-  /** Hard reset — for dev/testing environments only. */
   resetStore(): void {
     store.reset();
   }

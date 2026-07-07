@@ -1,9 +1,6 @@
 import { store } from "../repositories/InMemoryStore";
 import { CartItem, Cart } from "../domain/Cart";
 
-/**
- * CartService — manages cart lifecycle for a user.
- */
 export class CartService {
   addItem(userId: string, item: CartItem): void {
     if (!userId || typeof userId !== "string") {
@@ -18,7 +15,6 @@ export class CartService {
     if (typeof item.quantity !== "number" || item.quantity < 1 || !Number.isInteger(item.quantity)) {
       throw new Error("quantity must be a positive integer");
     }
-
     if (!store.carts.has(userId)) {
       store.carts.set(userId, new Cart());
     }

@@ -5,10 +5,7 @@ beforeEach(() => store.reset());
 
 describe("CartService", () => {
   let service: CartService;
-
-  beforeEach(() => {
-    service = new CartService();
-  });
+  beforeEach(() => { service = new CartService(); });
 
   describe("addItem() - validation", () => {
     it("throws if userId is missing", () => {
@@ -16,31 +13,26 @@ describe("CartService", () => {
         service.addItem("", { itemId: "i1", price: 100, quantity: 1 })
       ).toThrow("userId is required");
     });
-
     it("throws if itemId is missing", () => {
       expect(() =>
         service.addItem("u1", { itemId: "", price: 100, quantity: 1 })
       ).toThrow("itemId is required");
     });
-
     it("throws if price is zero", () => {
       expect(() =>
         service.addItem("u1", { itemId: "i1", price: 0, quantity: 1 })
       ).toThrow("price must be a positive number");
     });
-
     it("throws if price is negative", () => {
       expect(() =>
         service.addItem("u1", { itemId: "i1", price: -10, quantity: 1 })
       ).toThrow("price must be a positive number");
     });
-
     it("throws if quantity is zero", () => {
       expect(() =>
         service.addItem("u1", { itemId: "i1", price: 100, quantity: 0 })
       ).toThrow("quantity must be a positive integer");
     });
-
     it("throws if quantity is a float", () => {
       expect(() =>
         service.addItem("u1", { itemId: "i1", price: 100, quantity: 1.5 })
@@ -53,12 +45,10 @@ describe("CartService", () => {
       service.addItem("u1", { itemId: "i1", price: 100, quantity: 1 });
       expect(service.getCart("u1")).not.toBeNull();
     });
-
     it("adds the item to the user cart", () => {
       service.addItem("u1", { itemId: "i1", price: 100, quantity: 2 });
       expect(service.getCart("u1")!.total()).toBe(200);
     });
-
     it("different users have isolated carts", () => {
       service.addItem("u1", { itemId: "i1", price: 100, quantity: 1 });
       service.addItem("u2", { itemId: "i1", price: 200, quantity: 1 });

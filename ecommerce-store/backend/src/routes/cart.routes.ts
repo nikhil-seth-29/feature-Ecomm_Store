@@ -1,4 +1,8 @@
 import { Router } from "express";
-import { addToCart } from "../controllers/CartController";
+import { addToCart, viewCart } from "../controllers/CartController";
 
-export default Router().post("/add", addToCart);
+const router = Router();
+router.post("/add", addToCart);
+router.get("/:userId", viewCart);
+
+export default router;

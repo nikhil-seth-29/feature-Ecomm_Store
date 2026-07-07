@@ -1,0 +1,126 @@
+{
+  "info": {
+    "name": "Ecommerce Store API",
+    "description": "Complete API collection. Run requests in order to walk through the full discount lifecycle.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3001" },
+    { "key": "userId",  "value": "u1" },
+    { "key": "discountCode", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Cart",
+      "item": [
+        {
+          "name": "Add item to cart",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/cart/add",
+            "body": { "mode": "raw", "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"itemId\": \"item-001\",\n  \"price\": 100,\n  \"quantity\": 1\n}" }
+          }
+        },
+        {
+          "name": "View cart",
+          "request": { "method": "GET", "url": "{{baseUrl}}/cart/{{userId}}" }
+        },
+        {
+          "name": "Add item - invalid (missing userId)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/cart/add",
+            "body": { "mode": "raw", "raw": "{\n  \"itemId\": \"item-001\",\n  \"price\": 100,\n  \"quantity\": 1\n}" }
+          }
+        },
+        {
+          "name": "Add item - invalid (negative price)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/cart/add",
+            "body": { "mode": "raw", "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"itemId\": \"item-001\",\n  \"price\": -50,\n  \"quantity\": 1\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Checkout",
+      "item": [
+        {
+          "name": "Checkout - no discount (Order 1)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/checkout",
+            "body": { "mode": "raw", "raw": "{\n  \"userId\": \"{{userId}}\"\n}" }
+          }
+        },
+        {
+          "name": "Checkout - no discount (Order 2)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/checkout",
+            "body": { "mode": "raw", "raw": "{\n  \"userId\": \"{{userId}}\"\n}" }
+          }
+        },
+        {
+          "name": "Checkout - Nth order triggers discount generation (Order 3)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/checkout",
+            "body": { "mode": "raw", "raw": "{\n  \"userId\": \"{{userId}}\"\n}" }
+          }
+        },
+        {
+          "name": "Checkout - apply discount code",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/checkout",
+            "body": { "mode": "raw", "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"discountCode\": \"{{discountCode}}\"\n}" }
+          }
+        },
+        {
+          "name": "Checkout - reuse same code (expect 0 discount)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/checkout",
+            "body": { "mode": "raw", "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"discountCode\": \"{{discountCode}}\"\n}" }
+          }
+        },
+        {
+          "name": "Checkout - empty cart (expect 400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/checkout",
+            "body": { "mode": "raw", "raw": "{\n  \"userId\": \"empty-user\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Get stats",
+          "request": { "method": "GET", "url": "{{baseUrl}}/admin/stats" }
+        },
+        {
+          "name": "Generate discount code (manual override)",
+          "request": { "method": "POST", "url": "{{baseUrl}}/admin/discount" }
+        },
+        {
+          "name": "Reset store (dev only)",
+          "request": { "method": "POST", "url": "{{baseUrl}}/admin/reset" }
+        }
+      ]
+    }
+  ]
+}

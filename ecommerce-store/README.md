@@ -1,289 +1,172 @@
-# 🛒 Ecommerce Store – Backend + Frontend (Dockerized)
+# Ecommerce Store
 
-This repository implements a simplified ecommerce store with cart, checkout, and discount code functionality, built as part of a backend-focused assignment.
+A clean, well-tested implementation of a backend-first ecommerce store with cart, checkout, and a discount code system.
 
-The system is fully Dockerized, uses an in-memory store, and includes API-level verification steps so reviewers can easily validate correctness.
+**Stack:** Node.js · TypeScript (strict) · Express · Jest · React · Docker
 
-## 📌 Problem Summary
+---
 
-- Users can add items to a cart  
-- Users can checkout to place an order  
-- Every Nth order (N = 3) generates a 10% discount coupon  
+## Architecture
+backend/src/
+├── domain/ # Business rules — Cart, Discount, Order (no framework deps)
+├── services/ # Use-case orchestration — CartService, CheckoutService, AdminService
+├── controllers/ # HTTP adapters — parse request, call service, send response
+├── routes/ # Express route bindings
+├── repositories/ # InMemoryStore singleton with reset() for test isolation
+└── config/ # STORE_CONFIG — NTH_ORDER and DISCOUNT_PERCENTAGE live here
+The layering is deliberate: business logic has zero knowledge of HTTP; domain objects have zero knowledge of the store. See `DECISIONS.md` for full reasoning.
 
-**Discount code:**
-- Applies to the entire order  
-- Can be used only once  
+---
 
-**Admin APIs:**
-- Generate discount codes  
-- View purchase & discount statistics  
+## Running the App
 
-UI provided as a stretch goal  
-No database (in-memory store only)
+### Docker (recommended)
 
-## 🧱 Tech Stack
-
-**Backend**
-- Node.js  
-- TypeScript  
-- Express  
-- In-memory repository pattern  
-- Jest (unit tests)  
-
-**Frontend**
-- React (minimal UI for demonstration)  
-
-**Infrastructure**
-- Docker  
-- Docker Compose  
-
-## 📂 Project Structure
-\`\`\`
-ecommerce-store/
-│
-├── backend/
-│   ├── src/
-│   │   ├── domain/        # Business logic (Cart, Discount, Order)
-│   │   ├── services/      # Use cases
-│   │   ├── controllers/   # HTTP adapters
-│   │   ├── routes/        # Express routes
-│   │   └── repositories/  # In-memory store
-│   ├── tests/             # Unit tests
-│   └── Dockerfile
-│
-├── frontend/
-│   ├── src/               # React UI
-│   └── Dockerfile
-│
-└── docker-compose.yml
-\`\`\`
-
-## 🚀 Running the Application
-
-### Prerequisites
-- Docker  
-- Docker Compose  
-
-### Start services
-From repository root:
-
-\`\`\`bash
+```bash
 docker-compose up --build
-\`\`\`
+```
 
-**Backend** will run on: \`http://localhost:3001\`  
-**Frontend** will run on: \`http://localhost:3000\`
+- Backend: http://localhost:3001
+- Frontend: http://localhost:3000
 
-## 🧪 API Verification (Step-by-Step)
+### Without Docker
 
-These steps allow full verification using terminal only (no UI or Postman required).  
-They work perfectly inside GitHub Codespaces.
+```bash
+cd backend && npm install && npm run dev
+cd frontend && npm install && npm start
+```
 
-### STEP 1️⃣ Add item to cart
-\`\`\`bash
-curl -X POST http://localhost:3001/cart/add \
-  -H "Content-Type: application/json" \
-  -d '{
-    "userId": "u1",
-    "itemId": "item1",
-    "price": 100,
-    "quantity": 1
-  }'
-\`\`\`
-**Expected response:**
-\`\`\`json
-{"status":"OK"}
-\`\`\`
+### Tests
 
-### STEP 2️⃣ Checkout – Order #1 (no discount)
-\`\`\`bash
-curl -X POST http://localhost:3001/checkout \
-  -H "Content-Type: application/json" \
-  -d '{
-    "userId": "u1"
-  }'
-\`\`\`
-**Expected:**
-\`\`\`json
-{
-  "total": 100,
-  "discount": 0,
-  "finalAmount": 100
-}
-\`\`\`
+```bash
+cd backend && npm test
+```
 
-### STEP 3️⃣ Checkout – Order #2 (no discount)
+---
 
-Repeat add item + checkout:
+## API Reference
 
-\`\`\`bash
-curl -X POST http://localhost:3001/cart/add \
-  -H "Content-Type: application/json" \
-  -d '{
-    "userId": "u1",
-    "itemId": "item1",
-    "price": 100,
-    "quantity": 1
-  }'
+### Cart
 
-curl -X POST http://localhost:3001/checkout \
-  -H "Content-Type: application/json" \
-  -d '{
-    "userId": "u1"
-  }'
-\`\`\`
+| Method | Path | Body | Description |
+|--------|------|------|-------------|
+| POST | /cart/add | {userId, itemId, price, quantity} | Add item (merges quantity if itemId exists) |
+| GET | /cart/:userId | — | View cart contents and total |
 
-**Expected:**
-\`\`\`json
-{
-  "total": 100,
-  "discount": 0,
-  "finalAmount": 100
-}
-\`\`\`
+### Checkout
 
-### STEP 4️⃣ Checkout – Order #3 (discount is GENERATED)
+| Method | Path | Body | Description |
+|--------|------|------|-------------|
+| POST | /checkout | {userId, discountCode?} | Place order; optionally redeem discount |
 
-Repeat again:
-
-\`\`\`bash
-curl -X POST http://localhost:3001/cart/add \
-  -H "Content-Type: application/json" \
-  -d '{
-    "userId": "u1",
-    "itemId": "item1",
-    "price": 100,
-    "quantity": 1
-  }'
-
-curl -X POST http://localhost:3001/checkout \
-  -H "Content-Type: application/json" \
-  -d '{
-    "userId": "u1"
-  }'
-\`\`\`
-
-➡️ Discount is generated internally at this point.
-
-### STEP 5️⃣ Verify discount code (Admin API)
-\`\`\`bash
-curl http://localhost:3001/admin/stats
-\`\`\`
-
-**Example response:**
-\`\`\`json
-{
-  "totalItemsPurchased": 3,
-  "totalPurchaseAmount": 300,
-  "totalDiscountAmount": 0,
-  "discountCodes": [
-    "DISCOUNT-1704xxxxxxx"
-  ]
-}
-\`\`\`
-
-📌 Copy the discount code.
-
-### STEP 6️⃣ Apply discount (valid only once)
-
-Add item:
-
-\`\`\`bash
-curl -X POST http://localhost:3001/cart/add \
-  -H "Content-Type: application/json" \
-  -d '{
-    "userId": "u1",
-    "itemId": "item1",
-    "price": 100,
-    "quantity": 1
-  }'
-\`\`\`
-
-Checkout with discount:
-
-\`\`\`bash
-curl -X POST http://localhost:3001/checkout \
-  -H "Content-Type: application/json" \
-  -d '{
-    "userId": "u1",
-    "discountCode": "DISCOUNT-PASTE-HERE"
-  }'
-\`\`\`
-
-**Expected:**
-\`\`\`json
+Response:
+```json
 {
   "total": 100,
   "discount": 10,
-  "finalAmount": 90
+  "finalAmount": 90,
+  "appliedCode": "DISCOUNT-1234567890",
+  "newDiscountGenerated": false
 }
-\`\`\`
+```
 
-### STEP 7️⃣ Verify discount cannot be reused
+### Admin
 
-Repeat checkout with same code:
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | /admin/stats | Full store statistics |
+| POST | /admin/discount | Manually generate a discount code |
+| POST | /admin/reset | Reset all state (dev/test only) |
 
-\`\`\`bash
+Stats response:
+```json
+{
+  "totalOrders": 4,
+  "totalItemsPurchased": 5,
+  "totalRevenue": 400,
+  "totalDiscountAmount": 10,
+  "netRevenue": 390,
+  "discountCodes": ["DISCOUNT-1234567890"],
+  "activeDiscountCode": "DISCOUNT-1234567890",
+  "activeCodeUsed": true
+}
+```
+
+---
+
+## Full Discount Lifecycle (curl)
+
+```bash
+# 1. Add item
+curl -X POST http://localhost:3001/cart/add \
+  -H "Content-Type: application/json" \
+  -d '{"userId":"u1","itemId":"item1","price":100,"quantity":1}'
+
+# 2. Place orders 1 and 2 (no code generated yet)
+curl -s -X POST http://localhost:3001/checkout \
+  -H "Content-Type: application/json" -d '{"userId":"u1"}'
+# repeat add + checkout once more
+
+# 3. Order 3 — triggers code generation
+curl -s -X POST http://localhost:3001/checkout \
+  -H "Content-Type: application/json" -d '{"userId":"u1"}'
+# response: "newDiscountGenerated": true
+
+# 4. Get the code
+curl http://localhost:3001/admin/stats
+
+# 5. Apply the code
 curl -X POST http://localhost:3001/checkout \
   -H "Content-Type: application/json" \
-  -d '{
-    "userId": "u1",
-    "discountCode": "DISCOUNT-PASTE-HERE"
-  }'
-\`\`\`
+  -d '{"userId":"u1","discountCode":"DISCOUNT-PASTE-HERE"}'
+# response: "discount": 10, "finalAmount": 90
 
-**Expected:**
-\`\`\`json
-{
-  "total": 100,
-  "discount": 0,
-  "finalAmount": 100
-}
-\`\`\`
+# 6. Reuse attempt — single-use enforcement
+curl -X POST http://localhost:3001/checkout \
+  -H "Content-Type: application/json" \
+  -d '{"userId":"u1","discountCode":"DISCOUNT-PASTE-HERE"}'
+# response: "discount": 0
+```
 
-✅ Discount is single-use only.
+---
 
-## 📊 Admin Statistics
-\`\`\`bash
-curl http://localhost:3001/admin/stats
-\`\`\`
+## Tests
+backend/tests/
+├── Cart.test.ts — totals, quantities, merging, immutability
+├── Discount.test.ts — lifecycle, single-use, edge cases
+├── CartService.test.ts — input validation, user isolation
+├── CheckoutService.test.ts — full flow, stats accuracy, multi-user
+└── AdminService.test.ts — stats correctness, generation, reset
+All tests use `store.reset()` in `beforeEach` — zero state pollution.
 
-**Example:**
-\`\`\`json
-{
-  "totalItemsPurchased": 5,
-  "totalPurchaseAmount": 490,
-  "totalDiscountAmount": 10,
-  "discountCodes": ["DISCOUNT-1704xxxxxxx"]
-}
-\`\`\`
+---
 
-## 🧪 Running Unit Tests
-\`\`\`bash
-cd backend
-npm test
-\`\`\`
+## Requirements Coverage
 
-## ✅ Assignment Requirements – Coverage
+| Requirement | Status |
+|---|---|
+| Add to cart API | done |
+| View cart API | done |
+| Checkout API | done |
+| Discount code validation | done |
+| Nth order discount generation | done (N=3, configurable) |
+| Single-use enforcement | done |
+| Admin: generate discount | done |
+| Admin: stats | done |
+| Input validation | done |
+| In-memory store | done |
+| Unit tests (40+ cases) | done |
+| Docker + Compose | done |
+| Frontend UI | done |
+| Postman collection | done |
+| DECISIONS.md | done |
 
-| Requirement               | Status |
-|----------------------------|--------|
-| Add to cart API            | ✅     |
-| Checkout API               | ✅     |
-| Nth order discount         | ✅ (N = 3) |
-| Single-use discount        | ✅     |
-| Admin stats API            | ✅     |
-| In-memory store            | ✅     |
-| Dockerized                 | ✅     |
-| Unit tests                 | ✅     |
-| UI (stretch goal)          | ✅     |
+---
 
-## 📝 Notes
+## Design Decisions
 
-- Discount logic is implemented in the domain layer  
-- Business logic is isolated from HTTP & infrastructure  
-- Designed for clarity, testability, and extensibility  
+See [DECISIONS.md](./DECISIONS.md).
 
-## 👤 Author
+---
 
-Built by Nikhil Seth as part of the Assignment!
+Built by Nikhil Seth — Neustack Engineering Manager assignment.
